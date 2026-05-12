@@ -21,3 +21,76 @@
 // Petunjuk: jika parameter title diberikan, cari buku yang cocok
 //           jika tidak diberikan, tampilkan semua buku atau berikan informasi yang sesuai
 
+import { Book } from '../types/index';
+import { storage } from '../data/books';
+
+export class BookManager {
+    private books: Book[];
+
+    constructor() {
+        this.books = storage.load();
+    }
+
+    addBook(title: string, author: string, publicationYear: number): void {
+        const newBook: Book = {
+            id: Date.now(),
+            title,
+            author,
+            publicationYear,
+            isAvailable: true
+        };
+        this.books.push(newBook);
+        storage.save(this.books);
+        console.log(`Buku "${title}" berhasil ditambahkan.`);
+    }
+
+    listBooks(): void {
+        console.log("\n--- Daftar Buku ---");
+        if (this.books.length === 0) {
+            console.log("Koleksi kosong.");
+        } else {
+            this.books.forEach(b => 
+                console.log(`[${b.id}] ${b.title} - ${b.author}`)
+            );
+        }
+    }
+
+    deleteBook(id: number): void {
+        this.books = this.books.filter(b => b.id !== id);
+        storage.save(this.books);
+        console.log(`Buku ID ${id} dihapus.`);
+    }
+
+    // FILTER: Berdasarkan Judul
+    searchByTitle(query: string): Book[] {
+        const result = this.books.filter(b => 
+            b.title.toLowerCase().includes(query.toLowerCase())
+        );
+        this.displayResult(result, `Hasil pencarian judul: "${query}"`);
+        return result;
+    }
+
+    // FILTER: Berdasarkan Penulis
+    filterByAuthor(authorName: string): Book[] {
+        const result = this.books.filter(b => 
+            b.author.toLowerCase() === authorName.toLowerCase()
+        );
+        this.displayResult(result, `Buku karya: ${authorName}`);
+        return result;
+    }
+
+    // Helper function untuk menampilkan hasil di console
+    private displayResult(books: Book[], message: string): void {
+        console.log(`\n--- ${message} ---`);
+        if (books.length === 0) {
+            console.log("Data tidak ditemukan.");
+        } else {
+            books.forEach(b => console.log(`- ${b.title} (${b.author})`));
+        }
+    }
+
+    // Refresh data dari storage
+    refreshData(): void {
+        this.books = storage.load();
+    }
+}
